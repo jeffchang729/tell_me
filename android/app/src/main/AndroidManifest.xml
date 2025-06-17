@@ -1,0 +1,64 @@
+<!-- android/app/src/main/AndroidManifest.xml -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- 網路權限，用於數據同步和線上功能 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 存取網路狀態權限 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- 振動權限，用於通知和提醒 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
+    <application
+        android:label="健康健身"
+        android:name="${applicationName}"
+        android:icon="@mipmap/launcher_icon"
+        android:theme="@style/LaunchTheme"
+        android:exported="false"
+        android:usesCleartextTraffic="true">
+        
+        <!-- 主要活動配置 -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            
+            <!-- 啟動過濾器配置 -->
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        
+        <!-- Flutter 引擎初始化配置 -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+    
+    <!-- 查詢權限配置（Android 11+ 需要） -->
+    <queries>
+        <!-- 瀏覽器意圖 -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <!-- 電話意圖 -->
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+        <!-- 發送意圖 -->
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="*/*" />
+        </intent>
+    </queries>
+</manifest>

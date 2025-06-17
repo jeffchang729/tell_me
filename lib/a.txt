@@ -1,0 +1,45 @@
+列出磁碟區 Data 的資料夾 PATH
+磁碟區序號為 E059-CAF4
+D:.
+│  a.txt
+│  main.dart
+│  
+├─config
+│      app_config.dart
+│      app_theme.dart
+│      tab_icon_data.dart
+│      
+├─controllers
+│      app_controller.dart
+│      diary_controller.dart
+│      training_controller.dart
+│      
+├─models
+│      health_models.dart
+│      measurement_models.dart
+│      tab_icon_data.dart
+│      
+├─screens
+│      app_container.dart
+│      diary_screen.dart
+│      training_screen.dart
+│      
+├─services
+│      health_data_service.dart
+│      storage_service.dart
+│      
+├─utils
+│      app_utils.dart
+│      
+└─widgets
+    │  chart_widgets.dart
+    │  common_widgets.dart
+    │  navigation_widgets.dart
+    │  
+    ├─diary
+    │      meals_list_view.dart
+    │      water_view.dart
+    │      
+    └─training
+            area_list_view.dart
+            
