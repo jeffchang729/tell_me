@@ -8,11 +8,11 @@ import '../config/app_theme.dart';
 import '../controllers/app_controller.dart';
 import '../widgets/navigation_widgets.dart';
 import '../models/tab_icon_data.dart';
-import 'diary_screen.dart';
+import 'home_screen.dart'; // [2024-06-18] 將 diary_screen 改為 home_screen
 import 'training_screen.dart';
 
 /// 應用程式主容器
-/// 
+///
 /// 負責管理整個應用程式的主要結構，包括：
 /// - 底部導航列
 /// - 頁面切換
@@ -27,25 +27,24 @@ class AppContainer extends StatefulWidget {
 
 class _AppContainerState extends State<AppContainer>
     with TickerProviderStateMixin {
-  
   // ==================== 控制器和變數 ====================
-  
+
   /// 應用程式控制器
   final AppController appController = Get.find<AppController>();
-  
+
   /// 主要動畫控制器
   AnimationController? animationController;
-  
+
   /// 目前顯示的頁面內容
   Widget tabBody = Container(
     color: AppTheme.background,
   );
-  
+
   /// 底部導航圖示清單
   List<TabIconData> tabIconsList = TabIconData.tabIconsList;
 
   // ==================== 生命週期方法 ====================
-  
+
   @override
   void initState() {
     super.initState();
@@ -61,7 +60,7 @@ class _AppContainerState extends State<AppContainer>
   }
 
   // ==================== 初始化方法 ====================
-  
+
   /// 初始化動畫控制器
   void _initializeAnimation() {
     animationController = AnimationController(
@@ -76,7 +75,7 @@ class _AppContainerState extends State<AppContainer>
     for (TabIconData tab in tabIconsList) {
       tab.isSelected = false;
     }
-    
+
     // 設定第一個分頁為選中狀態
     tabIconsList[0].isSelected = true;
   }
@@ -89,15 +88,15 @@ class _AppContainerState extends State<AppContainer>
   }
 
   // ==================== 頁面切換方法 ====================
-  
+
   /// 根據索引設定頁面
   void _setPageByIndex(int index) {
     setState(() {
       switch (index) {
         case 0:
         case 2:
-          // 日記頁面（索引0和2都顯示日記頁面）
-          tabBody = DiaryScreen(animationController: animationController);
+          // [2024-06-18] 將 DiaryScreen 改為 HomeScreen
+          tabBody = HomeScreen(animationController: animationController);
           break;
         case 1:
         case 3:
@@ -105,7 +104,8 @@ class _AppContainerState extends State<AppContainer>
           tabBody = TrainingScreen(animationController: animationController);
           break;
         default:
-          tabBody = DiaryScreen(animationController: animationController);
+          // [2024-06-18] 將 DiaryScreen 改為 HomeScreen
+          tabBody = HomeScreen(animationController: animationController);
       }
     });
   }
@@ -114,14 +114,14 @@ class _AppContainerState extends State<AppContainer>
   void _handleTabChange(int index) {
     // 更新控制器狀態
     appController.changeTabIndex(index);
-    
+
     // 播放切換動畫
     animationController?.reverse().then<dynamic>((data) {
       if (!mounted) return;
-      
+
       // 設定新頁面
       _setPageByIndex(index);
-      
+
       // 啟動新頁面動畫
       animationController?.forward();
     });
@@ -240,10 +240,9 @@ class _AppContainerState extends State<AppContainer>
   }
 
   // ==================== 添加記錄方法 ====================
-  
+
   /// 添加餐點記錄
   void _addMealRecord() {
-    // 實現添加餐點記錄的邏輯
     Get.snackbar(
       '新增餐點',
       '餐點記錄功能開發中...',
@@ -257,7 +256,6 @@ class _AppContainerState extends State<AppContainer>
 
   /// 添加運動記錄
   void _addWorkoutRecord() {
-    // 實現添加運動記錄的邏輯
     Get.snackbar(
       '新增運動',
       '運動記錄功能開發中...',
@@ -271,7 +269,6 @@ class _AppContainerState extends State<AppContainer>
 
   /// 添加飲水記錄
   void _addWaterRecord() {
-    // 實現添加飲水記錄的邏輯
     Get.snackbar(
       '記錄飲水',
       '已增加 250ml 飲水量',
@@ -285,7 +282,6 @@ class _AppContainerState extends State<AppContainer>
 
   /// 添加測量記錄
   void _addMeasurementRecord() {
-    // 實現添加測量記錄的邏輯
     Get.snackbar(
       '測量體重',
       '身體測量功能開發中...',
@@ -298,7 +294,7 @@ class _AppContainerState extends State<AppContainer>
   }
 
   // ==================== 資料載入方法 ====================
-  
+
   /// 載入頁面資料
   Future<bool> getData() async {
     await Future<dynamic>.delayed(const Duration(milliseconds: 200));
@@ -306,7 +302,7 @@ class _AppContainerState extends State<AppContainer>
   }
 
   // ==================== UI 建構方法 ====================
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -365,7 +361,7 @@ class _AppContainerState extends State<AppContainer>
   }
 
   // ==================== 偵錯方法 ====================
-  
+
   /// 列印當前狀態（僅用於偵錯）
   void _debugPrintState() {
     if (appController.isDebugMode) {
