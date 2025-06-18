@@ -35,7 +35,7 @@ class _InfoTopicsBarState extends State<InfoTopicsBar> {
     Topic(title: '今日頭條', icon: Icons.article_outlined),
     Topic(title: '天氣', icon: Icons.wb_sunny_outlined),
     Topic(title: '股票', icon: Icons.trending_up),
-    Topic(title: '國際大事', icon: Icons.public),
+    Topic(title: '國際', icon: Icons.public),
     Topic(title: '科技', icon: Icons.memory),
     Topic(title: '運動', icon: Icons.sports_basketball_outlined),
     Topic(title: '娛樂', icon: Icons.movie_filter_outlined),

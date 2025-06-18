@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
       endColor: '#FFB295',
     ),
     MealCardData(
-      title: '國際大事',
+      title: '國際',
       imagePath: '',
       calories: 0,
       items: [],

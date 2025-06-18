@@ -35,7 +35,7 @@ class _PostCardViewState extends State<PostCardView> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 216,
+      height: 180, // [美化] 稍微降低高度，讓版面更緊湊
       width: double.infinity,
       child: ListView.builder(
         padding: const EdgeInsets.only(top: 0, bottom: 0, right: 16, left: 16),
@@ -85,7 +85,8 @@ class MealCard extends StatelessWidget {
             transform: Matrix4.translationValues(
                 100 * (1.0 - animation!.value), 0.0, 0.0),
             child: SizedBox(
-              width: 130,
+              // [美化] 設定固定寬度，確保所有卡片大小一致
+              width: 120,
               child: Stack(
                 children: <Widget>[
                   Padding(
@@ -121,25 +122,25 @@ class MealCard extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            // [修改] 顯示主題名稱，例如 "股票"
+                            // 顯示主題名稱，例如 "股票"
+                            const Spacer(), // 使用 Spacer 將文字推到卡片底部
                             Text(
                               mealData!.title,
-                              textAlign: TextAlign.center,
+                              textAlign: TextAlign.left, // 文字靠左
                               style: const TextStyle(
                                 fontFamily: AppTheme.fontName,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 18, // 加大字體
+                                fontSize: 18,
                                 letterSpacing: 0.2,
                                 color: AppTheme.white,
                               ),
                             ),
-                            // [移除] 不再需要顯示餐點項目和卡路里
                           ],
                         ),
                       ),
                     ),
                   ),
-                  // [修改] 將圖片替換為主題的第一個字
+                  // 將圖片替換為主題的第一個字
                   Positioned(
                     top: -10,
                     left: -8,
@@ -147,7 +148,7 @@ class MealCard extends StatelessWidget {
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withOpacity(0.2), // 稍微調亮背景圓圈
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -160,11 +161,19 @@ class MealCard extends StatelessWidget {
                       height: 60,
                       child: Center(
                         child: Text(
-                          mealData!.title.substring(0, 1), // 取得主題的第一個字
+                          mealData!.title.substring(0, 1),
                           style: TextStyle(
                             fontSize: 40,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.white.withOpacity(0.8),
+                            // [美化] 將文字顏色改為深灰色，並調整陰影
+                            color: AppTheme.darkerText,
+                            shadows: [
+                              Shadow(
+                                blurRadius: 2.0,
+                                color: Colors.black.withOpacity(0.1),
+                                offset: const Offset(1.0, 1.0),
+                              ),
+                            ]
                           ),
                         ),
                       ),
