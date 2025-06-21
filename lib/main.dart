@@ -5,11 +5,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'config/app_config.dart';
-import 'config/app_theme.dart';
-import 'controllers/app_controller.dart';
-import 'services/storage_service.dart';
-import 'screens/app_container.dart';
+import 'core/config/app_config.dart';
+import 'core/theme/app_theme.dart';
+import 'features/home/controllers/app_controller.dart';
+import 'shared/services/storage_service.dart';
+import 'features/home/views/app_container.dart';
 
 void main() async {
   // 確保 Flutter 綁定已初始化
@@ -39,7 +39,6 @@ void main() async {
 }
 
 /// 應用程式主類別
-/// 
 /// 負責配置應用程式的基本設定，包括主題、路由、國際化等
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -83,7 +82,6 @@ class MyApp extends StatelessWidget {
 }
 
 /// 全域依賴注入綁定
-/// 
 /// 負責註冊所有需要全域存取的服務和控制器
 class AppBinding extends Bindings {
   @override
