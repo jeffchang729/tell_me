@@ -1,6 +1,10 @@
 # pubspec.yaml
-name: health_fitness_app
-description: 健康健身追蹤應用程式
+name: tell_me
+# [建議] 將描述改為英文，排除極端情況下可能發生的編碼問題
+description: A personalized information dashboard app.
+
+# [建議] 加入此行，這是 Flutter 專案的良好實踐，可以防止意外發布到 pub.dev
+publish_to: 'none' 
 
 version: 1.0.0+1
 
@@ -11,47 +15,49 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # 原有套件
-  cupertino_icons: ^1.0.2
-  font_awesome_flutter: ^10.6.0
-  
-  # 新增必要套件
+  # --- App核心套件 ---
   get: ^4.6.6                    # 狀態管理
   shared_preferences: ^2.2.2     # 本地儲存
-  intl: ^0.18.1                  # 國際化和日期格式
+  intl: ^0.19.0                  # 國際化和日期格式
+  http: ^1.1.0                   # 網路請求
+
+  # --- UI相關套件 ---
+  cupertino_icons: ^1.0.2
+  font_awesome_flutter: ^10.6.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
-  # 圖示產生工具
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.13.1  # App 圖示產生工具
 
-# Flutter Launcher Icons 配置
+# Flutter Launcher Icons 配置 (此處保持不變)
 flutter_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/icons/app_icon.png"
-  min_sdk_android: 21 # android min sdk min:16, default 21
+  min_sdk_android: 21
   web:
     generate: true
     image_path: "assets/icons/app_icon.png"
-    background_color: "#hexcode"
-    theme_color: "#hexcode"
+    background_color: "#FFFFFF"
+    theme_color: "#2633C5"
   windows:
     generate: true
     image_path: "assets/icons/app_icon.png"
-    icon_size: 48 # min:48, max:256, default: 48
+    icon_size: 48
 
 flutter:
   uses-material-design: true
 
+  # 資源路徑 (此處保持不變)
   assets:
     - assets/fitness_app/
     - assets/fonts/
     - assets/icons/
     - assets/images/
 
+  # 字型 (此處保持不變)
   fonts:
     - family: WorkSans
       fonts:
