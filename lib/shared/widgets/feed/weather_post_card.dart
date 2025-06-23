@@ -1,5 +1,5 @@
 // shared/widgets/feed/weather_post_card.dart
-// 天氣資訊貼文卡片 - 修正 temperatureRange 問題
+// 天氣資訊貼文卡片 - 更新漸層效果
 // 功能：在貼文流中顯示豐富的天氣資訊，並提供「建立卡片」按鈕。
 
 import 'package:flutter/material.dart';
@@ -33,16 +33,14 @@ class WeatherPostCard extends StatelessWidget {
           _buildPostHeader(),
           _buildMainWeatherCard(),
           _buildHourlyForecast(),
-          if(weatherData.forecast != null) _buildDailyForecast(),
+          if (weatherData.forecast != null) _buildDailyForecast(),
           if (showCreateButton) _buildActionButtons(),
           _buildPostFooter(),
         ],
       ),
     );
   }
-  
-  /// 建立貼文標題區域
-  /// 包含天氣圖示、標題和地點資訊
+
   Widget _buildPostHeader() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -94,27 +92,29 @@ class WeatherPostCard extends StatelessWidget {
     );
   }
 
-  /// 建立主要天氣卡片
-  /// 顯示目前溫度、描述和詳細氣象資訊
+  /// [美化] 建立主要天氣卡片
+  /// 更新漸層效果，使其更豐富、更有層次感。
   Widget _buildMainWeatherCard() {
     final currentWeather = weatherData.currentWeather;
-    
+    // 定義一組漂亮的藍色漸層
+    final List<Color> gradientColors = [
+      const Color(0xFF4A90E2),
+      const Color(0xFF50C9C3)
+    ];
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            HexColor(weatherData.cardColor),
-            HexColor(weatherData.cardColor).withOpacity(0.7),
-          ],
+          colors: gradientColors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: HexColor(weatherData.cardColor).withOpacity(0.3),
+            color: gradientColors.first.withOpacity(0.4),
             offset: const Offset(0, 4),
             blurRadius: 12,
           ),
@@ -149,7 +149,7 @@ class WeatherPostCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _getComfortLevel(currentWeather.temperature),
+                      currentWeather.comfortLevel,
                       style: TextStyle(
                         fontSize: 14,
                         color: AppTheme.white.withOpacity(0.8),
@@ -165,15 +165,17 @@ class WeatherPostCard extends StatelessWidget {
                       color: AppTheme.white,
                     ),
                     const SizedBox(height: 8),
-                    if (weatherData.forecast?.dailyForecasts.isNotEmpty == true)
+                    if (weatherData.forecast?.dailyForecasts.isNotEmpty ==
+                        true)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: AppTheme.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          _getTemperatureRange(weatherData.forecast!.dailyForecasts.first),
+                          weatherData.forecast!.dailyForecasts.first.temperatureRange,
                           style: TextStyle(
                             fontSize: 14,
                             color: AppTheme.white.withOpacity(0.9),
@@ -197,7 +199,7 @@ class WeatherPostCard extends StatelessWidget {
                 _buildWeatherDetail(
                   Icons.air,
                   '風速',
-                  currentWeather.windSpeed != null 
+                  currentWeather.windSpeed != null
                       ? '${currentWeather.windSpeed!.toStringAsFixed(1)} m/s'
                       : '無資料',
                 ),
@@ -214,7 +216,6 @@ class WeatherPostCard extends StatelessWidget {
     );
   }
 
-  /// 建立天氣詳情項目
   Widget _buildWeatherDetail(IconData icon, String label, String value) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -245,7 +246,6 @@ class WeatherPostCard extends StatelessWidget {
     );
   }
 
-  /// 建立24小時預報區域
   Widget _buildHourlyForecast() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -279,8 +279,9 @@ class WeatherPostCard extends StatelessWidget {
               itemCount: 8, // 顯示8個時段（24小時，每3小時一個）
               itemBuilder: (context, index) {
                 final hour = DateTime.now().add(Duration(hours: index * 3));
-                final temp = weatherData.currentWeather.temperature + (index % 2 == 0 ? -1 : 1) * (index * 0.5);
-                
+                final temp = weatherData.currentWeather.temperature +
+                    (index % 2 == 0 ? -1 : 1) * (index * 0.5);
+
                 return Container(
                   width: 60,
                   margin: const EdgeInsets.only(right: 16),
@@ -288,7 +289,9 @@ class WeatherPostCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        index == 0 ? '現在' : AppUtils.formatTime(hour, format: 'HH:mm'),
+                        index == 0
+                            ? '現在'
+                            : AppUtils.formatTime(hour, format: 'HH:mm'),
                         style: AppTheme.caption.copyWith(
                           color: AppTheme.grey,
                           fontWeight: FontWeight.w500,
@@ -317,7 +320,6 @@ class WeatherPostCard extends StatelessWidget {
     );
   }
 
-  /// 建立7天預報區域
   Widget _buildDailyForecast() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -345,14 +347,13 @@ class WeatherPostCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ...weatherData.forecast!.dailyForecasts.take(7).map(
-            (forecast) => _buildDailyForecastItem(forecast),
-          ),
+                (forecast) => _buildDailyForecastItem(forecast),
+              ),
         ],
       ),
     );
   }
 
-  /// 建立每日預報項目
   Widget _buildDailyForecastItem(DailyForecast forecast) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -361,7 +362,7 @@ class WeatherPostCard extends StatelessWidget {
           SizedBox(
             width: 80,
             child: Text(
-              _getDateText(forecast.date),
+              forecast.dateText,
               style: AppTheme.body1.copyWith(
                 color: AppTheme.darkText,
                 fontWeight: FontWeight.w500,
@@ -412,7 +413,7 @@ class WeatherPostCard extends StatelessWidget {
           SizedBox(
             width: 70,
             child: Text(
-              _getTemperatureRange(forecast),
+              forecast.temperatureRange,
               textAlign: TextAlign.right,
               style: AppTheme.body1.copyWith(
                 fontWeight: FontWeight.w600,
@@ -425,7 +426,6 @@ class WeatherPostCard extends StatelessWidget {
     );
   }
 
-  /// 建立操作按鈕區域
   Widget _buildActionButtons() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -471,8 +471,7 @@ class WeatherPostCard extends StatelessWidget {
       ),
     );
   }
-  
-  /// 建立貼文底部資訊
+
   Widget _buildPostFooter() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -517,7 +516,6 @@ class WeatherPostCard extends StatelessWidget {
     );
   }
 
-  /// 根據溫度取得對應的天氣圖示
   IconData _getWeatherIcon(double temperature) {
     if (temperature >= 30) {
       return Icons.wb_sunny; // 炎熱 - 太陽
@@ -529,42 +527,6 @@ class WeatherPostCard extends StatelessWidget {
       return Icons.cloud; // 涼爽 - 雲朵
     } else {
       return Icons.ac_unit; // 寒冷 - 雪花
-    }
-  }
-
-  /// 根據溫度取得舒適度描述
-  String _getComfortLevel(double temperature) {
-    if (temperature >= 30) {
-      return '炎熱';
-    } else if (temperature >= 25) {
-      return '溫暖';
-    } else if (temperature >= 20) {
-      return '舒適';
-    } else if (temperature >= 15) {
-      return '涼爽';
-    } else {
-      return '寒冷';
-    }
-  }
-
-  /// 產生溫度範圍字串
-  String _getTemperatureRange(DailyForecast forecast) {
-    return '${forecast.minTemperature}° - ${forecast.maxTemperature}°';
-  }
-
-  /// 取得日期文字
-  String _getDateText(DateTime date) {
-    final now = DateTime.now();
-    final difference = date.difference(now).inDays;
-    
-    if (difference == 0) {
-      return '今日';
-    } else if (difference == 1) {
-      return '明日';
-    } else if (difference == 2) {
-      return '後天';
-    } else {
-      return '${date.month}/${date.day}';
     }
   }
 }

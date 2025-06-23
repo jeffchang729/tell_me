@@ -1,7 +1,8 @@
 // lib/shared/models/search_models.dart
-// 通用搜尋結果模型 - 最終修正版
+// 通用搜尋結果模型 - [修正] 修正新聞卡片資料型別問題
 // 功能：定義一個可以容納多種類型資訊的通用搜尋結果結構，並使其可以被儲存和讀取。
 
+import 'package:tell_me/shared/models/feed_models.dart';
 import 'package:tell_me/shared/models/weather_models.dart';
 
 // ------------------- 枚舉：搜尋結果類型 -------------------
@@ -22,13 +23,10 @@ abstract class UniversalSearchResult {
   dynamic get data;
   int get relevance;
 
-  // 新增一個 const 建構子，讓子類別可以呼叫。
   const UniversalSearchResult();
 
-  /// 將物件轉換為可儲存的 JSON Map
   Map<String, dynamic> toJson();
 
-  /// 從 JSON Map 建立對應的物件實例
   factory UniversalSearchResult.fromJson(Map<String, dynamic> json) {
     final type = SearchResultType.values.firstWhere(
       (e) => e.toString() == json['type'],
@@ -41,14 +39,14 @@ abstract class UniversalSearchResult {
       case SearchResultType.stock:
         return StockSearchResultItem.fromJson(json);
       case SearchResultType.news:
-        return NewsSearchResultItem.fromJson(json);
+        return NewsSearchResultItem.fromJson(json); // 現在可以正確解析
       default:
         throw Exception('不支援的搜尋結果類型: $type');
     }
   }
 }
 
-// ------------------- 實作：天氣搜尋結果 -------------------
+// ------------------- 天氣搜尋結果 -------------------
 class WeatherSearchResultItem extends UniversalSearchResult {
   @override
   final String id;
@@ -87,12 +85,12 @@ class WeatherSearchResultItem extends UniversalSearchResult {
       title: json['title'],
       subtitle: json['subtitle'],
       data: WeatherCardData.fromJson(json['data']),
-      relevance: json['relevance'],
+      relevance: json['relevance'] ?? 90,
     );
   }
 }
 
-// ------------------- 佔位符：股票搜尋結果 -------------------
+// ------------------- 股票搜尋結果 -------------------
 class StockSearchResultItem extends UniversalSearchResult {
   @override
   final String id;
@@ -103,7 +101,7 @@ class StockSearchResultItem extends UniversalSearchResult {
   @override
   final String subtitle;
   @override
-  final dynamic data;
+  final Map<String, dynamic> data; // 股票資料保持為 Map
   @override
   final int relevance;
 
@@ -130,13 +128,13 @@ class StockSearchResultItem extends UniversalSearchResult {
       id: json['id'],
       title: json['title'],
       subtitle: json['subtitle'],
-      data: json['data'],
-      relevance: json['relevance'],
+      data: Map<String, dynamic>.from(json['data']),
+      relevance: json['relevance'] ?? 100,
     );
   }
 }
 
-// ------------------- 佔位符：新聞搜尋結果 -------------------
+// ------------------- 新聞搜尋結果 -------------------
 class NewsSearchResultItem extends UniversalSearchResult {
   @override
   final String id;
@@ -147,7 +145,7 @@ class NewsSearchResultItem extends UniversalSearchResult {
   @override
   final String subtitle;
   @override
-  final dynamic data;
+  final PostData data; // [修正] data 的型別改為 PostData
   @override
   final int relevance;
   
@@ -165,7 +163,7 @@ class NewsSearchResultItem extends UniversalSearchResult {
         'type': type.toString(),
         'title': title,
         'subtitle': subtitle,
-        'data': data,
+        'data': data.toJson(), // [修正] 呼叫 PostData 的 toJson 方法
         'relevance': relevance,
       };
 
@@ -174,8 +172,8 @@ class NewsSearchResultItem extends UniversalSearchResult {
       id: json['id'],
       title: json['title'],
       subtitle: json['subtitle'],
-      data: json['data'],
-      relevance: json['relevance'],
+      data: PostData.fromJson(json['data']), // [修正] 使用 PostData.fromJson 解析
+      relevance: json['relevance'] ?? 80,
     );
   }
 }
