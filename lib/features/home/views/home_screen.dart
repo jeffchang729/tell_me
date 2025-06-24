@@ -1,6 +1,6 @@
 // features/home/views/home_screen.dart
-// 主畫面 - [修正] 解決 UnimplementedError
-// 功能：修正 TopicCard 的建立方式，並加入更穩健的錯誤處理。
+// 主畫面 - [最終修正] 補上缺失的 import
+// 功能：解決因缺少模型導入而導致的編譯錯誤。
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,6 +12,9 @@ import 'package:tell_me/shared/widgets/feed/stock_post_card.dart';
 import 'package:tell_me/shared/widgets/feed/weather_post_card.dart';
 import 'package:tell_me/shared/widgets/topic_card.dart';
 import 'package:tell_me/shared/models/topic_model.dart';
+// [修正] 補上缺失的資料模型 import
+import 'package:tell_me/shared/models/weather_models.dart';
+import 'package:tell_me/shared/models/feed_models.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -150,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       try {
                         return _buildCardForItem(item);
                       } catch (e, s) {
-                        print('❌ 建構卡片時發生錯誤: $e');
+                        print('== ❌ [UI Error] 建構卡片時發生錯誤: $e');
                         print(s);
                         return _buildErrorCard(item.id);
                       }
@@ -190,42 +193,56 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final cardKey = ValueKey(item.id);
     switch (item.type) {
       case SearchResultType.weather:
-        return WeatherPostCard(
-          key: cardKey,
-          weatherData: item.data,
-          showCreateButton: false,
-          onRemove: () => appController.removeTrackedItem(item.id),
-        );
+        if (item.data is WeatherCardData) {
+          return WeatherPostCard(
+            key: cardKey,
+            weatherData: item.data,
+            showCreateButton: false,
+            onRemove: () => appController.removeTrackedItem(item.id),
+          );
+        }
+        break;
       case SearchResultType.stock:
-        return StockPostCard(
-          key: cardKey,
-          stockData: item as StockSearchResultItem,
-          onRemove: () => appController.removeTrackedItem(item.id),
-        );
+         if (item is StockSearchResultItem) {
+          return StockPostCard(
+            key: cardKey,
+            stockData: item,
+            onRemove: () => appController.removeTrackedItem(item.id),
+          );
+        }
+        break;
       case SearchResultType.news:
-        return InfoPostCard(
-          key: cardKey,
-          post: item.data,
-          onRemove: () => appController.removeTrackedItem(item.id),
-        );
+        if (item.data is PostData) {
+          return InfoPostCard(
+            key: cardKey,
+            post: item.data,
+            onRemove: () => appController.removeTrackedItem(item.id),
+          );
+        }
+        break;
       default:
-         // 直接拋出錯誤，讓我們知道有未處理的類型
-        throw UnimplementedError('尚未實作此卡片類型: ${item.type}');
+       return _buildErrorCard(item.id, message: '不支援的卡片類型: ${item.type.toString().split('.').last}');
     }
+    return _buildErrorCard(item.id, message: '資料格式錯誤');
   }
 
-  /// 當卡片建構失敗時，顯示一個錯誤提示卡片
-  Widget _buildErrorCard(String id) {
+  Widget _buildErrorCard(String id, {String message = '請嘗試移除此卡片後再重新建立'}) {
     return Card(
       key: ValueKey('error_$id'),
-      color: Colors.red[100],
+      color: Colors.red[50],
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.red.withOpacity(0.5))
+      ),
+      elevation: 0,
       child: ListTile(
         leading: Icon(Icons.error_outline, color: Colors.red[700]),
-        title: Text('卡片載入失敗', style: TextStyle(color: Colors.red[900])),
-        subtitle: const Text('請嘗試移除此卡片後再重新建立'),
+        title: Text('卡片載入失敗', style: TextStyle(color: Colors.red[900], fontWeight: FontWeight.bold)),
+        subtitle: Text(message, style: TextStyle(color: Colors.red[800])),
         trailing: IconButton(
           icon: Icon(Icons.delete_forever, color: Colors.red[700]),
+          tooltip: '移除損壞的卡片',
           onPressed: () => appController.removeTrackedItem(id),
         ),
       ),
@@ -337,7 +354,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// [修正] 移除 subtitle，因為 TopicCard 不再需要它
   TopicCardData _mapTypeToTopicCardData(SearchResultType type) {
     switch (type) {
       case SearchResultType.weather:
@@ -362,10 +378,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           endColor: Color(0xFFF9812B),
         );
       default:
-        // 對於未知的類型，返回一個通用的樣式
         return const TopicCardData(
-          icon: Icons.help_outline,
-          title: '其他',
+          icon: Icons.error_outline,
+          title: '未知',
           startColor: Colors.grey,
           endColor: Colors.blueGrey,
         );
