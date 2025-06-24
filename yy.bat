@@ -1,4 +1,4 @@
 @echo off
 call flutter clean
 call flutter pub get
-call call flutter run -d chrome
+call flutter run -d emulator-5554

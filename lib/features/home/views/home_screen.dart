@@ -1,7 +1,6 @@
 // features/home/views/home_screen.dart
-// 主畫面 - [重大修改] 動態載入使用者自訂卡片
-// 功能：此版本將清空預設內容，改為監聽 AppController 中的 trackedItems 列表，
-//       並動態渲染使用者從搜尋頁建立的卡片。如果列表為空，則顯示引導提示。
+// 主畫面 - [修正] 解決 UnimplementedError
+// 功能：修正 TopicCard 的建立方式，並加入更穩健的錯誤處理。
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,6 +10,9 @@ import 'package:tell_me/shared/models/search_models.dart';
 import 'package:tell_me/shared/widgets/feed/info_post_card.dart';
 import 'package:tell_me/shared/widgets/feed/stock_post_card.dart';
 import 'package:tell_me/shared/widgets/feed/weather_post_card.dart';
+import 'package:tell_me/shared/widgets/topic_card.dart';
+import 'package:tell_me/shared/models/topic_model.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key, this.animationController}) : super(key: key);
@@ -43,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         if (topBarOpacity != 0.0) setState(() => topBarOpacity = 0.0);
       }
     });
-    
+
     widget.animationController?.forward();
   }
 
@@ -55,15 +57,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         backgroundColor: Colors.transparent,
         body: Stack(
           children: <Widget>[
-            // 主內容區域，現在由 Obx 包裹以實現響應式更新
             Obx(() {
-              // 檢查是否有已追蹤的卡片
               if (appController.trackedItems.isEmpty) {
-                // 如果沒有，顯示引導畫面
                 return _buildEmptyState();
               } else {
-                // 如果有，建立卡片列表
-                return _buildTrackedItemsList();
+                return _buildContentView();
               }
             }),
             _buildAppBar(),
@@ -72,77 +70,170 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
-  
-  /// 建立使用者已追蹤卡片的列表
-  Widget _buildTrackedItemsList() {
-    return ListView.builder(
+
+  Widget _buildContentView() {
+    final uniqueTypes = appController.trackedItems.map((item) => item.type).toSet().toList();
+
+    return ListView(
       controller: scrollController,
       padding: EdgeInsets.only(
         top: AppBar().preferredSize.height +
             MediaQuery.of(context).padding.top +
-            16, // 稍微縮小頂部間距
+            16,
         bottom: 62 + MediaQuery.of(context).padding.bottom,
       ),
-      itemCount: appController.trackedItems.length,
-      itemBuilder: (BuildContext context, int index) {
-        final item = appController.trackedItems[index];
-        
-        // 使用動畫讓卡片出現更流暢
-        final animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-          CurvedAnimation(
-            parent: widget.animationController!,
-            curve: Interval(
-                (1 / appController.trackedItems.length) * index, 1.0,
-                curve: Curves.fastOutSlowIn),
+      children: [
+        _buildTopicFilterSection(uniqueTypes),
+        const SizedBox(height: 16),
+        _buildLiveContentSection(),
+      ],
+    );
+  }
+  
+  Widget _buildTopicFilterSection(List<SearchResultType> types) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.0),
+          child: Text('卡片區', style: AppTheme.title),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 120,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: types.length,
+            itemBuilder: (context, index) {
+              final type = types[index];
+              return Obx(() {
+                  final isSelected = appController.selectedTopicType.value == type;
+                  return _buildTopicCard(type, isSelected);
+              });
+            },
           ),
-        );
-
-        return AnimatedBuilder(
-          animation: animation,
-          builder: (context, child) => FadeTransition(
-            opacity: animation,
-            child: Transform(
-              transform: Matrix4.translationValues(
-                  0.0, 30 * (1.0 - animation.value), 0.0),
-              child: _buildCardForItem(item), // 根據項目類型建立對應卡片
-            ),
-          ),
-        );
-      },
+        ),
+      ],
     );
   }
 
-  /// 根據項目類型建立對應的卡片 Widget
+  Widget _buildLiveContentSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+         const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+          child: Text('即時內容區', style: AppTheme.title),
+        ),
+        Obx(() {
+           return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+            child: Column(
+              key: ValueKey(appController.selectedTopicType.value),
+              children: appController.filteredTrackedItems.isEmpty
+                  ? [
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: Text('此類別沒有卡片', style: TextStyle(color: AppTheme.grey)),
+                        ),
+                      )
+                    ]
+                  : appController.filteredTrackedItems.map((item) {
+                      try {
+                        return _buildCardForItem(item);
+                      } catch (e, s) {
+                        print('❌ 建構卡片時發生錯誤: $e');
+                        print(s);
+                        return _buildErrorCard(item.id);
+                      }
+                    }).toList(),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildTopicCard(SearchResultType type, bool isSelected) {
+    final cardData = _mapTypeToTopicCardData(type);
+    
+    return Container(
+      width: 120,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+        opacity: isSelected ? 1.0 : 0.65,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+          transform: isSelected ? (Matrix4.identity()..translate(0, -5, 0)) : Matrix4.identity(),
+          transformAlignment: Alignment.center,
+          child: TopicCard(
+            data: cardData,
+            onTap: () => appController.selectTopic(type),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildCardForItem(UniversalSearchResult item) {
+    final cardKey = ValueKey(item.id);
     switch (item.type) {
       case SearchResultType.weather:
         return WeatherPostCard(
-          weatherData: item.data, 
-          showCreateButton: false, // 在主畫面不需要「建立卡片」按鈕
+          key: cardKey,
+          weatherData: item.data,
+          showCreateButton: false,
+          onRemove: () => appController.removeTrackedItem(item.id),
         );
       case SearchResultType.stock:
         return StockPostCard(
+          key: cardKey,
           stockData: item as StockSearchResultItem,
           onRemove: () => appController.removeTrackedItem(item.id),
         );
       case SearchResultType.news:
-        // 這裡可以建立一個更詳細的新聞卡片，暫時使用 InfoPostCard
         return InfoPostCard(
-          post: item.data, // 假設 item.data 可以轉換為 PostData
+          key: cardKey,
+          post: item.data,
+          onRemove: () => appController.removeTrackedItem(item.id),
         );
       default:
-        return Card(
-          child: ListTile(
-            title: Text('不支援的卡片類型'),
-            subtitle: Text(item.title),
-          ),
-        );
+         // 直接拋出錯誤，讓我們知道有未處理的類型
+        throw UnimplementedError('尚未實作此卡片類型: ${item.type}');
     }
   }
 
-  /// 建立空狀態下的引導畫面
+  /// 當卡片建構失敗時，顯示一個錯誤提示卡片
+  Widget _buildErrorCard(String id) {
+    return Card(
+      key: ValueKey('error_$id'),
+      color: Colors.red[100],
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ListTile(
+        leading: Icon(Icons.error_outline, color: Colors.red[700]),
+        title: Text('卡片載入失敗', style: TextStyle(color: Colors.red[900])),
+        subtitle: const Text('請嘗試移除此卡片後再重新建立'),
+        trailing: IconButton(
+          icon: Icon(Icons.delete_forever, color: Colors.red[700]),
+          onPressed: () => appController.removeTrackedItem(id),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
-    return Center(
+     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40.0),
         child: Column(
@@ -157,21 +248,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const Text(
               '您的資訊中心是空的',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.darkerText,
-              ),
+              style: AppTheme.headline,
             ),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               '點擊下方的 🔍 按鈕，\n開始搜尋您感興趣的天氣、股票或新聞，並建立您的第一張資訊卡片！',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 16,
-                color: AppTheme.grey,
-                height: 1.5,
-              ),
+                  fontSize: 16, color: AppTheme.grey, height: 1.5),
             ),
           ],
         ),
@@ -179,9 +263,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// 建立 AppBar
   Widget _buildAppBar() {
-    return Column(
+     return Column(
       children: <Widget>[
         AnimatedBuilder(
           animation: widget.animationController!,
@@ -252,5 +335,40 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         )
       ],
     );
+  }
+
+  /// [修正] 移除 subtitle，因為 TopicCard 不再需要它
+  TopicCardData _mapTypeToTopicCardData(SearchResultType type) {
+    switch (type) {
+      case SearchResultType.weather:
+        return const TopicCardData(
+          icon: Icons.wb_cloudy_outlined,
+          title: '天氣',
+          startColor: Color(0xFF2E7CF6),
+          endColor: Color(0xFF6A88E5),
+        );
+      case SearchResultType.stock:
+        return const TopicCardData(
+          icon: Icons.show_chart,
+          title: '股市',
+          startColor: Color(0xFF42E695),
+          endColor: Color(0xFF36A45C),
+        );
+      case SearchResultType.news:
+        return const TopicCardData(
+          icon: Icons.article_outlined,
+          title: '新聞',
+          startColor: Color(0xFFFFB25E),
+          endColor: Color(0xFFF9812B),
+        );
+      default:
+        // 對於未知的類型，返回一個通用的樣式
+        return const TopicCardData(
+          icon: Icons.help_outline,
+          title: '其他',
+          startColor: Colors.grey,
+          endColor: Colors.blueGrey,
+        );
+    }
   }
 }
