@@ -1,9 +1,9 @@
 # pubspec.yaml
+# [完整版 V4.5.1]
+# 功能：提供完整的檔案內容，包含 flutter_icons 的所有設定。
 name: tell_me
-# [建議] 將描述改為英文，排除極端情況下可能發生的編碼問題
 description: A personalized information dashboard app.
 
-# [建議] 加入此行，這是 Flutter 專案的良好實踐，可以防止意外發布到 pub.dev
 publish_to: 'none' 
 
 version: 1.0.0+1
@@ -15,13 +15,10 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # --- App核心套件 ---
-  get: ^4.6.6                    # 狀態管理
-  shared_preferences: ^2.2.2     # 本地儲存
-  intl: ^0.19.0                  # 國際化和日期格式
-  http: ^1.1.0                   # 網路請求
-
-  # --- UI相關套件 ---
+  get: ^4.6.6
+  shared_preferences: ^2.2.2
+  intl: ^0.19.0
+  dio: ^5.4.3+1
   cupertino_icons: ^1.0.2
   font_awesome_flutter: ^10.6.0
 
@@ -29,9 +26,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
-  flutter_launcher_icons: ^0.13.1  # App 圖示產生工具
+  flutter_launcher_icons: ^0.13.1
 
-# Flutter Launcher Icons 配置 (此處保持不變)
+# Flutter Launcher Icons 配置 (完整版)
 flutter_icons:
   android: "launcher_icon"
   ios: true
@@ -41,7 +38,7 @@ flutter_icons:
     generate: true
     image_path: "assets/icons/app_icon.png"
     background_color: "#FFFFFF"
-    theme_color: "#2633C5"
+    theme_color: "#5685FF" # [修正] 改為我們的主色調
   windows:
     generate: true
     image_path: "assets/icons/app_icon.png"
@@ -50,14 +47,13 @@ flutter_icons:
 flutter:
   uses-material-design: true
 
-  # 資源路徑 (此處保持不變)
+  # 資源路徑宣告
   assets:
-    - assets/fitness_app/
-    - assets/fonts/
-    - assets/icons/
     - assets/images/
+    - assets/icons/
+    - assets/fonts/
 
-  # 字型 (此處保持不變)
+  # 字型宣告
   fonts:
     - family: WorkSans
       fonts:

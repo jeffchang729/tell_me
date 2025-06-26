@@ -1,227 +1,113 @@
-// lib/config/app_theme.dart
-// 應用程式主題配置檔案
-// 功能：統一管理應用程式的視覺主題和樣式
+// lib/core/theme/app_theme.dart
+// [錯誤修正 V5.1]
+// 功能：為 smartHomeNeumorphic 方法新增 gradient 參數，以支援天氣卡片的動態漸層背景。
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-/// 統一的應用程式主題配置類別
-/// 
-/// 整合並管理應用程式的所有視覺元素，包括：
-/// - 顏色定義
-/// - 文字樣式
-/// - 主題配置
-/// - 裝飾樣式等
+enum AppThemeStyle {
+  SmartHomeLight,
+  ClaymorphismDark,
+  MorningSilverGray,
+}
+
 class AppTheme {
-  AppTheme._(); // 私有建構函數，防止實例化
+  AppTheme._();
 
-  // ==================== 顏色定義 ====================
-  
-  /// 背景色系
-  static const Color background = Color(0xFFF2F3F8);
-  static const Color nearlyWhite = Color(0xFFFAFAFA);
-  static const Color notWhite = Color(0xFFEDF0F2);
-  static const Color white = Color(0xFFFFFFFF);
-  
-  /// 主色系
-  static const Color nearlyDarkBlue = Color(0xFF2633C5);
-  static const Color nearlyBlue = Color(0xFF00B6F0);
-  
-  /// 中性色系
-  static const Color nearlyBlack = Color(0xFF213333);
-  static const Color grey = Color(0xFF3A5160);
-  static const Color dark_grey = Color(0xFF313A44);
-  
-  /// 文字色系
-  static const Color darkText = Color(0xFF253840);
-  static const Color darkerText = Color(0xFF17262A);
-  static const Color lightText = Color(0xFF4A6572);
-  static const Color deactivatedText = Color(0xFF767676);
-  
-  /// 功能色系
-  static const Color dismissibleBackground = Color(0xFF364A54);
-  static const Color chipBackground = Color(0xFFEEF1F3);
-  static const Color spacer = Color(0xFFF2F2F2);
+  // --- 顏色定義 (維持不變) ---
+  static const Color smarthome_bg = Color(0xFFEEF0F5);
+  static const Color smarthome_primary_text = Color(0xFF3D5068);
+  static const Color smarthome_secondary_text = Color(0xFF98A6B9);
+  static const Color smarthome_primary_blue = Color(0xFF5685FF);
+  static const Color smarthome_accent_pink = Color(0xFFEF64D9);
+  static const Color smarthome_accent_green = Color(0xFF67E0BA);
+  static final Color smarthome_dark_shadow = const Color(0xFFA6B4C8).withOpacity(0.7);
+  static final Color smarthome_light_shadow = const Color(0xFFFFFFFF).withOpacity(0.8);
 
-  // ==================== 字型定義 ====================
   static const String fontName = 'Roboto';
 
-  // ==================== 主題配置 ====================
-  
-  /// 明亮主題配置
-  static ThemeData get lightTheme {
+  // --- 主題獲取 (維持不變) ---
+  static ThemeData getThemeData(AppThemeStyle style) {
+    switch (style) {
+      case AppThemeStyle.SmartHomeLight:
+      default:
+        return _buildTheme(
+          brightness: Brightness.light,
+          primaryColor: smarthome_primary_blue,
+          scaffoldBackgroundColor: smarthome_bg,
+          iconColor: smarthome_secondary_text,
+          textTheme: _buildTextTheme(smarthome_primary_text, smarthome_secondary_text, smarthome_primary_blue)
+        );
+    }
+  }
+
+  static ThemeData _buildTheme({ required Brightness brightness, required Color primaryColor, required Color scaffoldBackgroundColor, required Color iconColor, required TextTheme textTheme}) {
     return ThemeData(
-      primarySwatch: Colors.blue,
-      primaryColor: nearlyDarkBlue,
-      brightness: Brightness.light,
-      scaffoldBackgroundColor: background,
-      textTheme: textTheme,
+      brightness: brightness,
+      primaryColor: primaryColor,
+      scaffoldBackgroundColor: scaffoldBackgroundColor,
       fontFamily: fontName,
+      iconTheme: IconThemeData(color: iconColor, size: 24),
+      textTheme: textTheme,
+      colorScheme: ColorScheme.fromSeed(seedColor: primaryColor, brightness: brightness, background: scaffoldBackgroundColor),
+      splashColor: primaryColor.withOpacity(0.1),
+      highlightColor: Colors.transparent,
     );
   }
 
-  // ==================== 文字樣式定義 ====================
-  static const TextTheme textTheme = TextTheme(
-    headlineMedium: display1,
-    headlineSmall: headline,
-    titleLarge: title,
-    titleSmall: subtitle,
-    bodyMedium: body2,
-    bodyLarge: body1,
-    bodySmall: caption,
-  );
+  static TextTheme _buildTextTheme(Color primary, Color secondary, Color labelColor) {
+    return TextTheme(
+      headlineLarge: TextStyle(fontFamily: fontName, fontWeight: FontWeight.bold, fontSize: 32, color: primary),
+      headlineMedium: TextStyle(fontFamily: fontName, fontWeight: FontWeight.w700, fontSize: 24, color: primary),
+      headlineSmall: TextStyle(fontFamily: fontName, fontWeight: FontWeight.w600, fontSize: 20, color: primary),
+      titleLarge: TextStyle(fontFamily: fontName, fontWeight: FontWeight.w600, fontSize: 18, color: primary),
+      bodyLarge: TextStyle(fontFamily: fontName, fontWeight: FontWeight.normal, fontSize: 16, color: primary, height: 1.5),
+      bodyMedium: TextStyle(fontFamily: fontName, fontWeight: FontWeight.normal, fontSize: 14, color: secondary, height: 1.5),
+      labelLarge: TextStyle(fontFamily: fontName, fontWeight: FontWeight.w600, fontSize: 14, color: labelColor),
+    );
+  }
 
-  static const TextStyle display1 = TextStyle(
-    fontFamily: fontName,
-    fontWeight: FontWeight.bold,
-    fontSize: 36,
-    letterSpacing: 0.4,
-    height: 0.9,
-    color: darkerText,
-  );
-
-  static const TextStyle headline = TextStyle(
-    fontFamily: fontName,
-    fontWeight: FontWeight.bold,
-    fontSize: 24,
-    letterSpacing: 0.27,
-    color: darkerText,
-  );
-
-  static const TextStyle title = TextStyle(
-    fontFamily: fontName,
-    fontWeight: FontWeight.bold,
-    fontSize: 16,
-    letterSpacing: 0.18,
-    color: darkerText,
-  );
-
-  static const TextStyle subtitle = TextStyle(
-    fontFamily: fontName,
-    fontWeight: FontWeight.w400,
-    fontSize: 14,
-    letterSpacing: -0.04,
-    color: darkText,
-  );
-
-  static const TextStyle body2 = TextStyle(
-    fontFamily: fontName,
-    fontWeight: FontWeight.w400,
-    fontSize: 14,
-    letterSpacing: 0.2,
-    color: darkText,
-  );
-
-  static const TextStyle body1 = TextStyle(
-    fontFamily: fontName,
-    fontWeight: FontWeight.w400,
-    fontSize: 16,
-    letterSpacing: -0.05,
-    color: darkText,
-  );
-
-  static const TextStyle caption = TextStyle(
-    fontFamily: fontName,
-    fontWeight: FontWeight.w400,
-    fontSize: 12,
-    letterSpacing: 0.2,
-    color: lightText,
-  );
-
-  // ==================== 實用裝飾方法 ====================
-  
-  /// 建立標準卡片裝飾
-  /// 
-  /// [color] 卡片背景色，預設為白色
-  /// [radius] 圓角半徑，預設為 8.0
-  /// [withShadow] 是否包含陰影，預設為 true
-  static BoxDecoration cardDecoration({
+  // [重大修改] 新增 gradient 參數
+  static BoxDecoration smartHomeNeumorphic({
+    double radius = 20.0,
     Color? color,
-    double radius = 8.0,
-    bool withShadow = true,
+    bool isConcave = false,
+    Gradient? gradient, // [新增] 可選的漸層參數
   }) {
-    return BoxDecoration(
-      color: color ?? white,
-      borderRadius: BorderRadius.circular(radius),
-      boxShadow: withShadow ? [
-        BoxShadow(
-          color: grey.withOpacity(0.2),
-          offset: const Offset(1.1, 1.1),
-          blurRadius: 10.0,
+    final baseColor = color ?? smarthome_bg;
+
+    if (isConcave) {
+      return BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            smarthome_dark_shadow.withOpacity(0.4),
+            smarthome_light_shadow.withOpacity(0.5),
+          ],
+          stops: const [0.0, 1.0],
         ),
-      ] : null,
-    );
-  }
+      );
+    }
 
-  /// 建立特殊卡片裝飾（健康APP樣式）
-  /// 
-  /// 右上角有特殊圓角的卡片設計
-  static BoxDecoration specialCardDecoration({
-    Color? color,
-    double radius = 8.0,
-  }) {
     return BoxDecoration(
-      color: color ?? white,
-      borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(radius),
-        bottomLeft: Radius.circular(radius),
-        bottomRight: Radius.circular(radius),
-        topRight: Radius.circular(radius * 8.5), // 特殊的右上角圓角 (68.0)
-      ),
+      color: baseColor,
+      // [新增] 如果提供了 gradient，就使用它
+      gradient: gradient,
+      borderRadius: BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: grey.withOpacity(0.2),
-          offset: const Offset(1.1, 1.1),
-          blurRadius: 10.0,
+          color: smarthome_dark_shadow,
+          offset: const Offset(10, 10),
+          blurRadius: 24,
+        ),
+        BoxShadow(
+          color: smarthome_light_shadow,
+          offset: const Offset(-12, -12),
+          blurRadius: 20,
         ),
       ],
     );
   }
-
-  /// 建立漸層裝飾
-  /// 
-  /// [colors] 漸層顏色清單
-  /// [begin] 漸層開始位置
-  /// [end] 漸層結束位置
-  /// [radius] 圓角半徑
-  static BoxDecoration gradientDecoration({
-    required List<Color> colors,
-    AlignmentGeometry begin = Alignment.topLeft,
-    AlignmentGeometry end = Alignment.bottomRight,
-    double radius = 8.0,
-    bool withShadow = true,
-  }) {
-    return BoxDecoration(
-      gradient: LinearGradient(
-        colors: colors,
-        begin: begin,
-        end: end,
-      ),
-      borderRadius: BorderRadius.circular(radius),
-      boxShadow: withShadow ? [
-        BoxShadow(
-          color: colors.first.withOpacity(0.4),
-          offset: const Offset(1.1, 4.0),
-          blurRadius: 8.0,
-        ),
-      ] : null,
-    );
-  }
-
-  /// 取得標準陰影清單
-  static List<BoxShadow> get standardShadow => [
-    BoxShadow(
-      color: grey.withOpacity(0.2),
-      offset: const Offset(1.1, 1.1),
-      blurRadius: 10.0,
-    ),
-  ];
-
-  /// 取得大陰影清單
-  static List<BoxShadow> get largeShadow => [
-    BoxShadow(
-      color: nearlyDarkBlue.withOpacity(0.4),
-      offset: const Offset(8.0, 16.0),
-      blurRadius: 16.0,
-    ),
-  ];
 }

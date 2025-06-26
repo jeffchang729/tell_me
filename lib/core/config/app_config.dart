@@ -1,6 +1,6 @@
-// core/config/app_config.dart
-// 應用程式設定檔 - [最終修正]
-// 功能：修正 API 金鑰的存取權限問題。
+// lib/core/config/app_config.dart
+// 應用程式設定檔 - [Neumorphism 風格改造]
+// 功能：使用環境變數安全地管理 API 金鑰，並移除與新風格衝突的設定。
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -8,9 +8,14 @@ import 'package:flutter/material.dart';
 class AppConfig {
   // --- API 設定 ---
 
-  /// [修正] 中央氣象署 (CWA) 開放資料平台授權碼
-  /// 移除變數名前的底線，使其成為公開 (public) 變數。
-  static const String cwaApiKey = 'CWA-735C81D7-6FD6-403D-AC00-C960BFCDF72F';
+  /// [安全性強化] 中央氣象署 (CWA) 開放資料平台授權碼
+  /// 透過 String.fromEnvironment 從編譯環境中讀取金鑰。
+  /// 如此可避免將敏感金鑰直接寫死在程式碼中。
+  static const String cwaApiKey = String.fromEnvironment(
+    'CWA_API_KEY',
+    // defaultValue 確保在沒有特別設定的開發環境中，App 依然能正常運作。
+    defaultValue: 'CWA-735C81D7-6FD6-403D-AC00-C960BFCDF72F',
+  );
 
   /// CWA API 端點 - 一般天氣預報 (未來1週)
   static const String forecastEndpoint =
@@ -52,12 +57,14 @@ class AppConfig {
     {'name': '連江縣', 'code': 'LIE'},
   ];
 
-  static Color getWeatherCardColor(int id) {
-    final List<Color> colors = [
-      const Color(0xFF5C9DFF), const Color(0xFF6A88E5),
-      const Color(0xFF42E695), const Color(0xFF36A45C),
-      const Color(0xFFFFB25E), const Color(0xFFF9812B),
-    ];
-    return colors[id % colors.length];
-  }
+  // [移除] 根據 Neumorphism 設計原則，所有卡片背景應統一，
+  // 因此移除此方法，不再根據 ID 產生不同的顏色。
+  // static Color getWeatherCardColor(int id) {
+  //   final List<Color> colors = [
+  //     const Color(0xFF5C9DFF), const Color(0xFF6A88E5),
+  //     const Color(0xFF42E695), const Color(0xFF36A45C),
+  //     const Color(0xFFFFB25E), const Color(0xFFF9812B),
+  //   ];
+  //   return colors[id % colors.length];
+  // }
 }

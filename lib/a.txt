@@ -4,12 +4,19 @@ D:.
 ¢x  a.txt
 ¢x  main.dart
 ¢x  
+¢u¢wapp
+¢x      app_container.dart
+¢x      bottom_bar_item.dart
+¢x      navigation_widgets.dart
+¢x      
 ¢u¢wcore
 ¢x  ¢u¢wconfig
 ¢x  ¢x      app_config.dart
 ¢x  ¢x      
 ¢x  ¢u¢wservices
 ¢x  ¢x      dependency_injection.dart
+¢x  ¢x      fake_data_service.dart
+¢x  ¢x      storage_service.dart
 ¢x  ¢x      
 ¢x  ¢u¢wtheme
 ¢x  ¢x      app_theme.dart
@@ -17,64 +24,29 @@ D:.
 ¢x  ¢|¢wutils
 ¢x          app_utils.dart
 ¢x          
-¢u¢wfeatures
-¢x  ¢u¢wdiary
-¢x  ¢x  ¢u¢wcontrollers
-¢x  ¢x  ¢x      diary_controller.dart
-¢x  ¢x  ¢x      
-¢x  ¢x  ¢|¢wwidgets
-¢x  ¢x          meals_list_view.dart
-¢x  ¢x          water_view.dart
-¢x  ¢x          
-¢x  ¢u¢whome
-¢x  ¢x  ¢u¢wcontrollers
-¢x  ¢x  ¢x      app_controller.dart
-¢x  ¢x  ¢x      search_controller.dart
-¢x  ¢x  ¢x      
-¢x  ¢x  ¢u¢wmodels
-¢x  ¢x  ¢u¢wservices
-¢x  ¢x  ¢|¢wviews
-¢x  ¢x          app_container.dart
-¢x  ¢x          home_screen.dart
-¢x  ¢x          search_screen.dart
-¢x  ¢x          
-¢x  ¢|¢wtraining
-¢x      ¢u¢wcontrollers
-¢x      ¢x      training_controller.dart
-¢x      ¢x      
-¢x      ¢u¢wviews
-¢x      ¢x      training_screen.dart
-¢x      ¢x      
-¢x      ¢|¢wwidgets
-¢x              area_list_view.dart
-¢x              
-¢|¢wshared
-    ¢u¢wmodels
+¢|¢wfeatures
+    ¢u¢whome
+    ¢x      app_controller.dart
+    ¢x      home_screen.dart
+    ¢x      summary_card.dart
+    ¢x      
+    ¢u¢wnews
     ¢x      feed_models.dart
-    ¢x      health_models.dart
-    ¢x      meal_card_data.dart
-    ¢x      measurement_models.dart
+    ¢x      news_article_screen.dart
+    ¢x      post_card_news.dart
+    ¢x      
+    ¢u¢wsearch
+    ¢x      search_controller.dart
     ¢x      search_models.dart
-    ¢x      tab_icon_data.dart
-    ¢x      topic_model.dart
-    ¢x      weather_models.dart
+    ¢x      search_screen.dart
     ¢x      
-    ¢u¢wservices
-    ¢x      fake_data_service.dart
-    ¢x      health_data_service.dart
-    ¢x      storage_service.dart
-    ¢x      weather_service.dart
+    ¢u¢wstock
+    ¢x      post_card_stock.dart
+    ¢x      stock_detail_screen.dart
+    ¢x      stock_grid_item.dart
     ¢x      
-    ¢|¢wwidgets
-        ¢x  chart_widgets.dart
-        ¢x  common_widgets.dart
-        ¢x  navigation_widgets.dart
-        ¢x  topic_card.dart
-        ¢x  weather_search_dialog.dart
-        ¢x  
-        ¢|¢wfeed
-                info_post_card.dart
-                post_card_view.dart
-                stories_view.dart
-                weather_post_card.dart
-                
+    ¢|¢wweather
+            post_card_weather.dart
+            weather_models.dart
+            weather_service.dart
+            
