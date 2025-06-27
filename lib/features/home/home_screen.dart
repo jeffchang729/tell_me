@@ -1,8 +1,9 @@
 // lib/features/home/home_screen.dart
-// [體驗重構 V5.4]
+// [動畫還原 & 體驗升級 V5.8]
 // 功能：
-// 1. 摘要區恢復為單一的「天氣總覽」卡片。
-// 2. 內容區的天氣部分，改為可垂直滾動的區塊列表，每個城市一個區塊。
+// 1. [恢復] 將 HomeScreen 恢復為 StatefulWidget，並重新引入 AnimationController，讓卡片滑入動畫回歸。
+// 2. [升級] 使用 GetX 的 `ever` 監聽器，監聽分頁切換事件。確保每次切換到空白的首頁時，都能觸發並重新播放入場動畫。
+// 3. [恢復] 恢復四個可互動的佔位符卡片，提升空白頁面的功能性與引導性。
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide SearchController;
@@ -18,22 +19,71 @@ import 'package:tell_me/features/stock/stock_grid_item.dart';
 import 'package:tell_me/features/weather/weather_post_card.dart';
 
 
-class HomeScreen extends StatelessWidget {
+// [修改] 恢復為 StatefulWidget 以管理動畫
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  // [恢復] 動畫控制器
+  late final AnimationController _animationController;
+  final HomeController homeController = Get.find<HomeController>();
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    
+    // [新增] 智慧動畫觸發器
+    // `ever` 會監聽 `currentTabIndex` 的每一次變化
+    ever(homeController.currentTabIndex, (int tabIndex) {
+      // 當切換到首頁(index 0)時，嘗試播放動畫
+      if (tabIndex == 0) {
+        _playAnimation();
+      }
+    });
+
+    // 首次進入時，也嘗試播放一次
+    WidgetsBinding.instance.addPostFrameCallback((_) => _playAnimation());
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  // [新增] 播放動畫的方法
+  void _playAnimation() {
+    // 只有在首頁是空的狀態下，才重設並播放動畫
+    if (mounted && homeController.trackedItems.isEmpty) {
+      _animationController.reset();
+      _animationController.forward();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final HomeController homeController = Get.find<HomeController>();
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('TELL ME', style: Theme.of(context).textTheme.headlineMedium),
+        title: Text('TELL ME', style: theme.textTheme.headlineMedium),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        // [修改] 根據 Obx 的狀態來決定是否顯示 AppBar
+        toolbarHeight: homeController.trackedItems.isEmpty ? 0 : kToolbarHeight,
       ),
       body: Obx(() {
         if (homeController.trackedItems.isEmpty) {
-          return _buildSimplifiedEmptyState(context);
+          // [恢復] 顯示帶有動畫和互動的儀表板佔位符
+          return _buildAnimatedEmptyStateDashboard(context);
         } else {
           return Column(
             children: [
@@ -46,7 +96,8 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummarySection(BuildContext context, HomeController controller) {
+  // ... _buildSummarySection 和 _buildDetailSection 維持不變 ...
+   Widget _buildSummarySection(BuildContext context, HomeController controller) {
     return ScrollConfiguration(
       behavior: MyCustomScrollBehavior(),
       child: SizedBox(
@@ -55,23 +106,18 @@ class HomeScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           scrollDirection: Axis.horizontal,
           children: [
-            // [修改] 恢復為單一的天氣總覽卡片
             if (controller.trackedWeathers.isNotEmpty)
               Obx(() => HomeSummaryCard(
                 itemType: SearchResultType.weather,
                 isSelected: controller.selectedType.value == SearchResultType.weather,
                 onTap: () => controller.selectContent(type: SearchResultType.weather),
               )),
-            
-            // 股市總覽卡
             if (controller.trackedStocks.isNotEmpty)
               Obx(() => HomeSummaryCard(
                 itemType: SearchResultType.stock,
                 isSelected: controller.selectedType.value == SearchResultType.stock,
                 onTap: () => controller.selectContent(type: SearchResultType.stock),
               )),
-          
-            // 新聞主題卡
             ...controller.trackedNewsTopics.map((topic) {
               return Obx(() => HomeSummaryCard(
                 newsTopic: topic,
@@ -105,19 +151,14 @@ class HomeScreen extends StatelessWidget {
   Widget _buildDetailContent(BuildContext context, HomeController controller, SearchResultType? type) {
     switch (type) {
       case SearchResultType.weather:
-        // [重大修改] 改為可垂直滾動的 ListView，每個城市一個區塊
         return ListView.builder(
-          padding: const EdgeInsets.only(top: 16, bottom: 80), // 增加上下邊距
+          padding: const EdgeInsets.only(top: 16, bottom: 80),
           itemCount: controller.trackedWeathers.length,
           itemBuilder: (context, index) {
             final weatherItem = controller.trackedWeathers[index];
-            return WeatherPostCard(
-              key: ValueKey(weatherItem.id),
-              weatherData: weatherItem.data,
-            );
+            return WeatherPostCard(key: ValueKey(weatherItem.id), weatherData: weatherItem.data);
           },
         );
-
       case SearchResultType.stock:
         return GridView.builder(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
@@ -130,7 +171,6 @@ class HomeScreen extends StatelessWidget {
             return StockGridItem(stockData: stockItem);
           },
         );
-
       case SearchResultType.news:
         final selectedTopic = controller.selectedNewsTopic.value;
         if (selectedTopic == null) return const SizedBox.shrink();
@@ -144,48 +184,80 @@ class HomeScreen extends StatelessWidget {
             return NewsPostCard(key: ValueKey(newsItem.id), post: newsItem.data);
           },
         );
-        
       default:
         return const SizedBox.shrink();
     }
   }
   
-  Widget _buildSimplifiedEmptyState(BuildContext context) {
+  // [恢復] 帶有動畫與互動功能的空白頁面
+  Widget _buildAnimatedEmptyStateDashboard(BuildContext context) {
     final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: AppTheme.smartHomeNeumorphic(isConcave: true, radius: 80),
-              child: Icon(
-                Icons.add_chart_rounded,
-                size: 80,
-                color: (theme.iconTheme.color ?? AppTheme.smarthome_secondary_text).withOpacity(0.5),
-              ),
-            ),
-            const SizedBox(height: 32),
-            Text(
-              '您的儀表板是空的',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: theme.textTheme.headlineMedium?.color
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '點擊下方的「搜尋」按鈕\n開始建立您的第一張資訊卡片',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.textTheme.bodyMedium?.color,
-                height: 1.7,
-              ),
-            ),
-          ],
-        ),
+    final searchController = Get.find<SearchController>();
+
+    final animation1 = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+      parent: _animationController, curve: const Interval(0.1, 0.5, curve: Curves.easeOutCubic))
+    );
+    final animation2 = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+      parent: _animationController, curve: const Interval(0.2, 0.6, curve: Curves.easeOutCubic))
+    );
+    final animation3 = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+      parent: _animationController, curve: const Interval(0.3, 0.7, curve: Curves.easeOutCubic))
+    );
+    final animation4 = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+      parent: _animationController, curve: const Interval(0.4, 0.8, curve: Curves.easeOutCubic))
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('歡迎使用 TELL ME', textAlign: TextAlign.center, style: theme.textTheme.headlineMedium),
+          const SizedBox(height: 16),
+          Text(
+            '您的專屬智慧資訊中心\n點擊下方卡片，開始新增您的追蹤項目',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyLarge?.copyWith(color: theme.textTheme.bodyMedium?.color, height: 1.6),
+          ),
+          const SizedBox(height: 48),
+          Row(
+            children: [
+              Expanded(child: _AnimatedPlaceholderCard(
+                animation: animation1, icon: Icons.wb_sunny_outlined, label: '天氣',
+                onTap: () {
+                  homeController.changeTabIndex(1);
+                  searchController.performSearch('天氣');
+                },
+              )),
+              const SizedBox(width: 20),
+              Expanded(child: _AnimatedPlaceholderCard(
+                animation: animation2, icon: Icons.show_chart_rounded, label: '股票',
+                onTap: () {
+                  homeController.changeTabIndex(1);
+                  searchController.performSearch('所有股票');
+                },
+              )),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(child: _AnimatedPlaceholderCard(
+                animation: animation3, icon: Icons.article_outlined, label: '新聞',
+                onTap: () {
+                  homeController.changeTabIndex(1);
+                  searchController.performSearch('今日頭條');
+                },
+              )),
+              const SizedBox(width: 20),
+              Expanded(child: _AnimatedPlaceholderCard(
+                animation: animation4, icon: Icons.add_rounded, label: '更多',
+                onTap: () => homeController.changeTabIndex(1),
+              )),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -194,4 +266,63 @@ class HomeScreen extends StatelessWidget {
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => { PointerDeviceKind.touch, PointerDeviceKind.mouse };
+}
+
+class _AnimatedPlaceholderCard extends StatelessWidget {
+  final Animation<double> animation;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _AnimatedPlaceholderCard({
+    Key? key,
+    required this.animation,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        return FadeTransition(
+          opacity: animation,
+          child: Transform(
+            transform: Matrix4.translationValues(0.0, 30 * (1.0 - animation.value), 0.0),
+            child: child,
+          ),
+        );
+      },
+      child: GestureDetector(
+        onTap: onTap,
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: Container(
+            decoration: AppTheme.smartHomeNeumorphic(isConcave: true, radius: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 40,
+                  color: (theme.iconTheme.color ?? AppTheme.smarthome_secondary_text).withOpacity(0.6),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  label,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: (theme.textTheme.titleLarge?.color ?? AppTheme.smarthome_primary_text).withOpacity(0.8),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -1,14 +1,16 @@
 // lib/features/search/search_screen.dart
-// [錯誤修正 V5.5]
+// [體驗重構 V5.7]
 // 功能：
-// 1. 修正 import 路徑。
-// 2. 透過 `hide` 關鍵字，明確消除與 Material 函式庫的命名衝突。
+// 1. 根據結果類型，提供差異化的加入按鈕。
+// 2. 新聞類別：只在頂部顯示「全部加入」按鈕。
+// 3. 其他類別：只在每個項目上顯示獨立的「+」按鈕。
+// 4. 所有加入操作完成後，都會立即跳轉回主頁。
 
-import 'package:flutter/material.dart' hide SearchController; // [修改] 隱藏 Material 的 SearchController
+import 'package:flutter/material.dart' hide SearchController;
 import 'package:get/get.dart';
 import 'package:tell_me/core/theme/app_theme.dart';
 import 'package:tell_me/features/home/home_controller.dart';
-import 'package:tell_me/features/search/search_controller.dart'; // [修正] 確保 SearchController 從這裡導入
+import 'package:tell_me/features/search/search_controller.dart';
 import 'package:tell_me/features/search/search_models.dart';
 
 class SearchScreen extends StatelessWidget {
@@ -16,7 +18,6 @@ class SearchScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // [驗證] Get.find 現在可以正確找到 SearchController 的實例
     final SearchController searchController = Get.find<SearchController>();
     final HomeController homeController = Get.find<HomeController>();
     final TextEditingController textEditingController = TextEditingController();
@@ -46,7 +47,6 @@ class SearchScreen extends StatelessWidget {
     );
   }
 
-  // ... (其餘 Widget build 方法維持不變) ...
   Widget _buildSearchBar(BuildContext context, TextEditingController controller, SearchController searchController) {
     final theme = Theme.of(context);
     return Container(
@@ -80,7 +80,11 @@ class SearchScreen extends StatelessWidget {
     );
   }
 
+  // [重大修改] 根據結果類型，決定是否顯示「全部加入」按鈕
   Widget _buildResultGroup(BuildContext context, String title, List<UniversalSearchResult> items, HomeController homeController) {
+    // 檢查這個群組是否為新聞類型
+    final bool isNewsGroup = items.isNotEmpty && items.first.type == SearchResultType.news;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -91,20 +95,23 @@ class SearchScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(title, style: Theme.of(context).textTheme.headlineSmall),
-                TextButton.icon(
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                // 標題
+                Expanded(child: Text(title, style: Theme.of(context).textTheme.headlineSmall, overflow: TextOverflow.ellipsis)),
+                // [修改] 只在新聞群組顯示「全部加入」按鈕
+                if (isNewsGroup)
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
+                    label: const Text('全部加入'),
+                    onPressed: () {
+                      homeController.addTrackedItems(items);
+                      homeController.changeTabIndex(0);
+                    },
                   ),
-                  icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
-                  label: const Text('全部加入'),
-                  onPressed: () {
-                    homeController.addTrackedItems(items);
-                    homeController.changeTabIndex(0);
-                  },
-                ),
               ],
             ),
           ),
@@ -115,20 +122,15 @@ class SearchScreen extends StatelessWidget {
     );
   }
 
+  // [修改] 根據結果類型，決定是否顯示「+」按鈕
   Widget _buildResultCard(BuildContext context, UniversalSearchResult item, HomeController homeController) {
     return _SearchResultItemCard(
       item: item,
+      // [修改] 只有非新聞項目才需要獨立的加入按鈕
+      showAddButton: item.type != SearchResultType.news,
       onAdd: () {
         homeController.addTrackedItems([item]);
-        Get.snackbar(
-          '已加入儀表板', 
-          '"${item.title}" 已成功加入。',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Get.theme.primaryColor,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(12),
-          borderRadius: 12,
-        );
+        homeController.changeTabIndex(0);
       },
     );
   }
@@ -166,11 +168,13 @@ class SearchScreen extends StatelessWidget {
 class _SearchResultItemCard extends StatelessWidget {
   final UniversalSearchResult item;
   final VoidCallback onAdd;
+  final bool showAddButton; // [新增]
 
   const _SearchResultItemCard({
     Key? key,
     required this.item,
     required this.onAdd,
+    this.showAddButton = true, // [新增] 預設顯示
   }) : super(key: key);
 
   @override
@@ -208,19 +212,22 @@ class _SearchResultItemCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: onAdd,
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: AppTheme.smartHomeNeumorphic(radius: 20),
-                child: Icon(
-                  Icons.add_rounded,
-                  color: theme.primaryColor,
-                  size: 20,
+            // [修改] 根據 showAddButton 決定是否渲染「+」按鈕
+            if (showAddButton) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: onAdd,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: AppTheme.smartHomeNeumorphic(radius: 20),
+                  child: Icon(
+                    Icons.add_rounded,
+                    color: theme.primaryColor,
+                    size: 20,
+                  ),
                 ),
               ),
-            ),
+            ]
           ],
         ),
       ),

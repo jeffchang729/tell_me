@@ -1,6 +1,6 @@
 // lib/features/home/home_controller.dart
-// [體驗重構 V5.4]
-// 功能：恢復天氣的「群組」模式，移除 selectedWeatherId，邏輯回歸 V5.3 版本。
+// [體驗重構 V5.7]
+// 功能：恢復 V5.3 的邏輯，將天氣視為單一類別群組，而非為每個城市建立獨立卡片。
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -94,7 +94,6 @@ class HomeController extends GetxController {
     );
     
     await _saveTrackedItems();
-    showSuccessSnackbar('已加入儀表板', '${newItems.length} 個項目已成功加入。');
   }
 
   Future<void> _saveTrackedItems() async {

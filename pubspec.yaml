@@ -1,6 +1,6 @@
 # pubspec.yaml
-# [完整版 V4.5.1]
-# 功能：提供完整的檔案內容，包含 flutter_icons 的所有設定。
+# [API串接 V6.5 - 整合最終版]
+# 功能：整合所有必要的依賴套件與專案設定。
 name: tell_me
 description: A personalized information dashboard app.
 
@@ -19,6 +19,9 @@ dependencies:
   shared_preferences: ^2.2.2
   intl: ^0.19.0
   dio: ^5.4.3+1
+  # [新增] 用於自動管理 API 請求中的 Cookies，解決股票 API 401 錯誤
+  dio_cookie_manager: ^3.1.1 
+  cookie_jar: ^4.0.8
   cupertino_icons: ^1.0.2
   font_awesome_flutter: ^10.6.0
 
@@ -38,7 +41,7 @@ flutter_icons:
     generate: true
     image_path: "assets/icons/app_icon.png"
     background_color: "#FFFFFF"
-    theme_color: "#5685FF" # [修正] 改為我們的主色調
+    theme_color: "#5685FF" # 改為我們的主色調
   windows:
     generate: true
     image_path: "assets/icons/app_icon.png"
